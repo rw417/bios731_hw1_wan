@@ -12,6 +12,9 @@ library(tidyverse)
 knitr::opts_chunk$set(tidy = FALSE)
 ```
 
+## GitHub Repo Link:
+https://github.com/rw417/bios731_hw1_wan/tree/main
+
 ## Context
 
 This assignment reinforces ideas in Module 1: Reproducible computing in R. We focus specifically on implementing a large scale simulation study, but the assignment will also include components involving bootstrap and parallelization, Git/GitHub, and project organization.
