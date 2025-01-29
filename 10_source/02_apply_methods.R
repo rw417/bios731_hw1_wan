@@ -1,5 +1,4 @@
-
-
-fit_model = function(simulated_data){
-  lm(y ~ x, data = simulated_data)
+fit_model = function(simdata){
+  # apply linear regression
+  lm(y ~ x, data = simdata)
 }

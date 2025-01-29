@@ -1,21 +1,29 @@
 # load libraries
 library(tidyverse)
+library(stats)
 
-#
-#
-#
-get_simdata = function(n, beta_treat, sigma2){
-  beta0 = 1
-  x = rbinom(n, 1, prob = 0.5)
-  epsilon = rnorm(n, 0, sd = sqrt(sigma2))
-  y = beta0 + beta_treat * x + epsilon
 
-  tibble(
+
+get_simdata <- function(n, beta_treat, error_form, error_sigma2) {
+  beta0 <- 1
+  x <- rbinom(n, 1, prob = 0.5)
+  
+  # if all x's are the same, run again
+  while (length(unique(x)) == 1) {
+    x <- rbinom(n, 1, prob = 0.5)
+  }
+  
+  if (error_form == "normal") {
+    epsilon <- rnorm(n, 0, sd = sqrt(error_sigma2))
+  } else if (error_form == "lognormal") {
+    epsilon <- rlnorm(n, 0, sdlog = sqrt(error_sigma2))
+  } else {
+    stop("Error form must be 'normal' or 'lognormal'")
+  }
+  y <- beta0 + beta_treat * x + epsilon
+
+  return(tibble(
     x = x,
     y = y
-  )
-
+  ))
 }
-
-
-
