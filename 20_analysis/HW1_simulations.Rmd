@@ -136,7 +136,7 @@ We will execute this full simulation study. For full credit, make sure to implem
 source(here::here("11_simulations", "run_simulations.R"))
 ```
 
-**Note:** simulations were taking a long time, so I used 50 simulations for each scenario instead of 475. I also used too 50 bootstrap samples and 25 bootstrap samples for the inner bootstrap for bootstrap t intervals. If I had more compute time, I'd take 1,000 bootstrap samples and 500 samples for the inner bootstrap.
+**Note:** simulations were taking a long time, so I ran 475 simulations for each scenario with 200 bootstrap samples and 100 samples for the inner loop for bootstrap t intervals. If I had more compute time, I'd take 1,000 bootstrap samples and 500 samples for the inner bootstrap.
 
 ### Problem 1.4 Results summary
 
