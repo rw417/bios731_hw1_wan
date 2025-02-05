@@ -14,18 +14,17 @@ run_bootstrap <- function(simdata, sim_beta_hat, nboot, nboot_t, seed = NULL) {
     dimnames = list(NULL, c("beta_hat_b", "t_star"))
   )
 
+  n_bs <- nrow(simdata)
+  
   ####################
   # Start of Bootstrap
-  #tic("outer_bs")
+  start_of_bs <- proc.time()[3] # for timing
+  t_loop_duration <- 0 # for timing
   for (b in 1:nboot) {
     ####################
     # sample with replacement from simdata
-    bs_sample <- simdata[
-      sample(1:nrow(simdata),
-        size = nrow(simdata),
-        replace = TRUE
-      ),
-    ]
+    bs_idx <- sample(1:n_bs, size = n_bs, replace = TRUE)
+    bs_sample <- simdata[bs_idx, ]  # Direct indexing
 
     ####################
     # apply model to bs_sample
@@ -33,24 +32,18 @@ run_bootstrap <- function(simdata, sim_beta_hat, nboot, nboot_t, seed = NULL) {
 
     ####################
     # calculate bootstrap estimates of beta
-    bs_results[b, "beta_hat_b"] <- get_estimates(
-      model_fit = bs_fit
-    )$beta_hat
+    bs_results[b, "beta_hat_b"] <- get_estimates(model_fit = bs_fit)
 
     ####################
     # Bootstrap with t estimates
-    #tic("bootstrap_t_extra")
+    start_of_t_loop <- proc.time()[3]
     # Step 1: loop to run bootstrap with t estimates
-    boot_mean_b <- rep(NA, nboot_t)
+    boot_mean_b <- numeric(nboot_t)
     for (k in 1:nboot_t) {
       ####################
       # sample with replacement from bs_sample
-      bs_sample_k <- bs_sample[
-        sample(1:nrow(simdata),
-          size = nrow(simdata),
-          replace = TRUE
-        ),
-      ]
+      bs_idx_k <- sample(1:n_bs, size = n_bs, replace = TRUE)
+      bs_sample_k <- bs_sample[bs_idx_k, ]  # Direct indexing
 
       ####################
       # apply model on bs_sample_k
@@ -58,18 +51,26 @@ run_bootstrap <- function(simdata, sim_beta_hat, nboot, nboot_t, seed = NULL) {
 
       ####################
       # calculate inner bootstrap estimates of beta
-      boot_mean_b[k] <- get_estimates(
-        model_fit = bs_fit_k
-      )$beta_hat
+      boot_mean_b[k] <- get_estimates(model_fit = bs_fit_k)
     }
 
     # Step 2: calculate t_star
     se_star <- sd(boot_mean_b, na.rm = TRUE)
     bs_results[b, "t_star"] <- (bs_results[b, "beta_hat_b"] - sim_beta_hat) / se_star
+    
+    end_of_t_loop <- proc.time()[3]
+    t_loop_duration <- t_loop_duration + end_of_t_loop - start_of_t_loop
   }
+  end_of_bs <- proc.time()[3]
+  bs_duration_total <- end_of_bs - start_of_bs
+  bs_duration_no_t <- bs_duration_total - t_loop_duration
+  
+  bs_runtime <- c(bs_duration_no_t, bs_duration_no_t, bs_duration_total, t_loop_duration)
+  names(bs_runtime) <- c("wald", "percentile", "t", "t_loop")
+  
   # End of Bootstrap
   
-  return(bs_results)
+  return(list(bs_results, bs_runtime))
 
   ####################
   # compute final bootstrap estimates
@@ -124,7 +125,7 @@ run_bootstrap_parallel <- function(simdata, sim_beta_hat, nboot, nboot_t,seed = 
     t_star <- NA
 
     # Step 1: loop to run bootstrap with t estimates
-    boot_mean_b <- rep(NA, nboot_t)
+    boot_mean_b <- numeric(nboot_t)
     for (k in 1:nboot_t) {
       ####################
       # sample with replacement from bs_sample

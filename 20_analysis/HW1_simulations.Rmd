@@ -170,17 +170,17 @@ params_grid <- expand.grid(
 
 # Define table dimensions
 n_rows <- 18 # Excluding header row
-n_cols <- 7 # Excluding row names
+n_cols <- 10 # Excluding row names
 
 # Initialize a data frame with row names
 table_data <- data.frame(matrix(NA, nrow = n_rows, ncol = n_cols))
-colnames(table_data) <- c("Bias", "Bias 95% CI", "St. Err.", "St. Err. 95% CI", "Cover Wald", "Cover Pct", "Cover BSt")
+colnames(table_data) <- c("Bias", "Bias 95% CI", "St. Err.", "St. Err. 95% CI", "Cover Wald", "Cover Pct", "Cover BSt", "Time Wald", "Time Pct", "Time BSt")
 rownames(table_data) <- paste("Sc", 1:n_rows)
 
 # Populate the table with values using a loop
 for (i in 1:n_rows) {
   # Read in RDS file
-  results <- readRDS(here::here("30_results", paste0("scenario_", i, ".RDS")))
+  results <- readRDS(here::here("30_results", paste0("20250204_scenario_", i, ".RDS")))
 
   # Calculate the values to put into the cells
   bias <- c(
@@ -192,15 +192,19 @@ for (i in 1:n_rows) {
     signif(quantile(results[[1]][, "se_b"], c(0.025, 0.975)), 3)
   )
   coverages <- sapply(results, function(mat) mean(mat[, "coverage"]))
+  runtimes <- colMeans(results[[4]])[c(1,2,4)]
 
   # Fill the table with the calculated values
   table_data[i, 1] <- bias[1]
   table_data[i, 2] <- paste0("(", bias[2], ", ", bias[3], ")")
   table_data[i, 3] <- sterr[1]
   table_data[i, 4] <- paste0("(", sterr[2], ", ", sterr[3], ")")
-  table_data[i, 5] <- coverages[1]
-  table_data[i, 6] <- coverages[2]
-  table_data[i, 7] <- coverages[3]
+  table_data[i, 5] <- signif(coverages[1], 2)
+  table_data[i, 6] <- signif(coverages[2], 2)
+  table_data[i, 7] <- signif(coverages[3], 2)
+  table_data[i, 8] <- signif(runtimes[1], 2)
+  table_data[i, 9] <- signif(runtimes[2], 2)
+  table_data[i, 10] <- signif(runtimes[3], 2)
 }
 
 # Print the table in RMarkdown format
@@ -213,11 +217,11 @@ Interpret the results summarized in Problem 1.4. First, write a **paragraph** su
 
 - How do the different methods for constructing confidence intervals compare in terms of computation time?
 
-  I did not have the time to run the methods using separate bootstraps to evaluate computation time. I computed the confidence intervals for all three methods using the same bootstrap samples.
+The runtimes of the Wald and Percentile methods are similar, which is not surprising because they generally involve the same steps. The runtime of the Bootstrap t method is two orders of magnitude greater - this number will only increase as we increase the number of t bootstraps.
 
 - Which method(s) for constructing confidence intervals provide the best coverage when $\epsilon_i \sim N(0, 2)$?
 
-  The Wald method.
+  The Bootstrap t method.
   
 - Which method(s) for constructing confidence intervals provide the best coverage when $\epsilon_i \sim logNormal(0, \log (2))$?
 
@@ -225,4 +229,4 @@ Interpret the results summarized in Problem 1.4. First, write a **paragraph** su
 
 **Main Findings**
 
-The simulation study evaluated the bias and standard error of the average treatment effect by assuming three different values of the treatment effect, three different sample sizes, and two different error distributions. We compared the performance of three methods for constructing confidence intervals. The results suggest that the Wald method frequently provides the highest coverage, while the percentile method tends to be the most conservative. Additionally, misspecifying the error distribution (secnarios 10 through 18) does not introduce bias in the estimation of the treatment effect, but it does affect the standard error.
+The simulation study evaluated the bias and standard error of the average treatment effect by assuming three different values of the treatment effect, three different sample sizes, and two different error distributions. We compared the performance of three methods for constructing confidence intervals. The results suggest that the Bootstrap t method provides the highest coverage when the model is correctly specified. When the model is misspecified, the Wald method tends to provide the greatest coverage. Additionally, misspecifying the error distribution (secnarios 10 through 18) does not introduce bias in the estimation of the treatment effect, but it does substantially increase the standard error of the estimate.

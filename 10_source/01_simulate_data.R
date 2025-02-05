@@ -1,8 +1,5 @@
 # load libraries
-library(tidyverse)
 library(stats)
-
-
 
 get_simdata <- function(n, beta_treat, error_form, error_sigma2) {
   beta0 <- 1
@@ -22,8 +19,7 @@ get_simdata <- function(n, beta_treat, error_form, error_sigma2) {
   }
   y <- beta0 + beta_treat * x + epsilon
 
-  return(tibble(
-    x = x,
-    y = y
-  ))
+  # Put x and y into a matrix
+  simdata <- cbind(y, x)
+  return(simdata)
 }
